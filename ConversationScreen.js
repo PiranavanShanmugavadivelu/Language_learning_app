@@ -5,6 +5,7 @@ import {
   Text,
   View,
   TextInput,
+  FlatList,
   Button,
   TouchableHighlight,
   Alert,
@@ -12,22 +13,48 @@ import {
   ListView,
   TouchableOpacity
 } from 'react-native';
+import firebase from 'react-native-firebase';
 
 export default class ConversationScreen extends Component {
-
-  constructor(props) {
-    super(props);
-    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+  constructor() {
+    super();
+    this.ref = firebase.firestore().collection('Cituations/GLrxXeUoWYNnbuoaAIrz/Conversation');
+    this.unsubscribe = null;
     this.state = {
-      dataSource: ds.cloneWithRows([
-         {image: "https://bootdey.com/img/Content/avatar/avatar1.png"},
-         {image: "https://bootdey.com/img/Content/avatar/avatar6.png"},
-         {image: "https://bootdey.com/img/Content/avatar/avatar2.png"},
-         {image: "https://bootdey.com/img/Content/avatar/avatar3.png"},
-         {image: "https://bootdey.com/img/Content/avatar/avatar4.png"},
-      ]),
+        loading: true,
+        Cituations: [],
+
     };
-  }
+
+}
+
+
+
+componentDidMount() {
+  this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate)
+}
+
+componentWillUnmount() {
+  this.unsubscribe();
+}
+
+onCollectionUpdate = (querySnapshot) => {
+  const Conversation = [];
+  querySnapshot.forEach((doc) => {
+    const { English,Tamil,Url} = doc.data();
+    Conversation.push({
+      key: doc.id,
+      doc, // DocumentSnapshot
+      English,
+      Tamil,
+      Url
+    });
+  });
+  this.setState({
+    Conversation,
+    loading: false,
+ });
+}
 
   static navigationOptions = ({ navigation }) => {
     return {
@@ -38,29 +65,34 @@ export default class ConversationScreen extends Component {
   render() {
     const { navigation } = this.props;
     const Title = navigation.getParam('Title');
-    
+
     return (
 
-        <ListView enableEmptySections={true}
-        dataSource={this.state.dataSource}
-        renderRow={(service) => {
+          <FlatList style={styles.notificationList} enableEmptySections={true}
+          data={this.state.Conversation}
+          keyExtractor= {(item) => {
+            return item.Title,item.Description;
+          }}
+          renderItem={(post) => {
+            const item = post.item;
+
           return (
             <View style={styles.box}>
-              <Image style={styles.image} source={{uri: service.image}} />
+              {/* <Image style={styles.image} source={{uri: service.image}} /> */}
               <View style={styles.boxContent}>
-                <Text style={styles.title}>Title</Text>
-                <Text style={styles.description}>Lorem ipsum dolor sit amet, elit consectetur</Text>
+                <Text style={styles.title}>{item.Tamil}</Text>
+                <Text style={styles.description}>{item.English}</Text>
                 <View style={styles.buttons}>
                   <TouchableHighlight style={[styles.button, styles.view]} onPress={() => this.clickListener('login')}>
-                    <Image style={styles.icon} source={{uri: 'https://png.icons8.com/ok/androidL/30/ffffff'}}/>
+                    <Image style={styles.icon} source={{uri: 'https://img.icons8.com/ios/50/000000/play.png'}}/>
                   </TouchableHighlight>
 
                   <TouchableHighlight style={[styles.button, styles.profile]} onPress={() => this.clickListener('login')}>
-                    <Image style={styles.icon} source={{uri: 'https://png.icons8.com/male-user/win8/30/ffffff'}}/>
+                    <Image style={styles.icon} source={{uri: 'https://img.icons8.com/ios/50/000000/stop.png'}}/>
                   </TouchableHighlight>
 
                   <TouchableHighlight style={[styles.button, styles.message]} onPress={() => this.clickListener('login')}>
-                    <Image style={styles.icon} source={{uri: 'https://png.icons8.com/envelope/p1em/30/ffffff'}}/>
+                    <Image style={styles.icon} source={{uri: 'https://img.icons8.com/ios/50/000000/pause.png'}}/>
                   </TouchableHighlight>
                 </View>
               </View>
